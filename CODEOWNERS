@@ -1,0 +1,5 @@
+#This is a commit.
+#Each line is a file pattern followed by one or more owner.
+#These commits will be the default owners for everything in the repo, unless a later match takes precedence.
+#*  @<OrgName>/<TeamName>
+*@GE-PWR-RPA/GPACOE_PLATFORM_TEAM

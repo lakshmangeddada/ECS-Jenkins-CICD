@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Task definition for the ECS service
+Parameters:
+  Image:
+    Type: String
+    Description: The Docker image to use
+  ContainerPort:
+    Type: Number
+    Description: The port the container listens on
+  Memory:
+    Type: Number
+    Description: The amount of memory to allocate to the container
+  CPU:
+    Type: Number
+    Description: The amount of CPU to allocate to the container
+  UAI:
+    Type: String
+    Description: The UAI to use for application being managed.
+    Default: 123456789
+    AllowedPattern: '[0-9]{9}'
+    MinLength: 9
+    MaxLength: 9
+  env:
+    Type: String
+    Description: The environment to deploy to
+    Default: dev
+    AllowedValues:
+      - dev
+      - test
+      - prod
+  AppName:
+    Type: String
+    Description: The name of the application
+    Default: cai
+  TaskName:
+    Type: String
+    Description: The name of the task
+    Default: dev-logaggregator-task
+  ContainerCpu:
+    Type: Number
+    Description: The amount of CPU to allocate to the container
+    Default: 2048
+    AllowedValues:
+      - 1024
+      - 2048
+      - 4096
+  ContainerMemory:
+    Type: Number
+    Description: The amount of memory to allocate to the container
+    Default: 4096  
+  ImageURI:
+    Type: String
+    Description: The URI of the Docker image
+    Default: 123456789.dkr.ecr.us-west-2.amazonaws.com/cai:latest
+  ImageTag:
+    Type: String
+    Description: The tag of the Docker image
+    Default: latest
+  ContainerPort:
+    Type: Number
+    Description: The port the container listens on
+    Default: 8080
+  ServiceName:
+    Type: String
+    Description: The name of the service
+    Default: dev-logaggregator-service
+  StreamPrefix:
+    Type: String
+    Description: The prefix for the log stream
+    Default: jarvis
+  CloudWatchLogGroup:
+    Type: String
+    Description: The name of the CloudWatch log group
+    Default: dev-logaggregator-task-log
+
+Resources:
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${AppName}-${TaskName}
+      Cpu: !Ref ContainerCpu
+      Memory: !Ref ContainerMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref TaskRole
+      ExecutionRoleArn: !Ref ExecutionRole
+      ContainerDefinitions:
+        - Name: !Sub ${AppName}-${TaskName}
+          Image: !Sub "${ImageURI}:${ImageTag}"
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-stream-prefix: !Ref StreamPrefix
+              awslogs-region: !Ref AWS::Region 
+              awslogs-create-group: 'true'
+          EntryPoint:
+            - "python3"
+            - "-m"
+            - "flask"
+            - "--app"
+            - "app"
+            - "run"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8080"
+outputs:
+  ECSTaskDefinitionARN:
+    Description: The task definition
+    Value: !Ref ECSTaskDefinition            
+            
+                 
